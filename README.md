@@ -1,0 +1,34 @@
+TODO
+
+- [ ] Checkin code to github repository
+- [ ] Configure Makefile settings
+- [ ] Create template project structure
+- [ ] Function to print colorized error, warning, info to console
+- [ ] Print Make variables
+- [ ] Auto print targerdt usage info
+- [ ] Explicitly list paths to subprojects
+- [ ] Auto discover projects and write to incluadable projects file
+- [ ] Add LICENSE file and LICENSE info to top of Makefile
+- [ ] Autoset "Working Directory" based on Makefile path variable
+- [ ] Auto create a skeleton module from template files in a directory
+- [ ] Auto create a skeleton project from template files in a directory
+- [ ] Figure out variable locations and load order
+- [ ] Figure out env file locations and load order
+- [ ] Add Github template for Issues, PR, Contributing
+- [ ] Map to make targets to terraform commands
+- [ ] Map `args` variable to terraform args
+- [ ] Map make targets to terraform args after args variable
+- [ ] Auto install Terraform
+- [ ] Auto install AWS CLI
+- [ ] Update .gitignore to capture all unmanaged files/dirs
+- [ ] Add default .gitattributes file
+- [ ] Set immutable `TF_WORKSPACE` variable to `env` variable value
+- [ ] Configure `allowed_account_ids`
+- [ ] Set variables to point to `working, scripts, modules, .terraform, source` paths
+- [ ] Create a base-module for creating Terraform state bucket and dynamodb lock table
+- [ ] Auto generate backend config file based on TF state and ddb table
+- [ ] Write out labeled plan files
+- [ ] Configure terraform to apply a specific labeled plan file
+- [ ] Do the same for destroy plan files but keep seperate from regular plan files
+- [ ] Allow make files in target directories to override/extend default Makefile behavior
+- [ ] Split makefiles into smaller includable files by functionality

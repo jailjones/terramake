@@ -7,53 +7,73 @@
 #	- Bash: https://www.gnu.org/software/bash/			#
 #########################################################
 
+#########################################################
+# Makefile Settings										#
+#########################################################
 .SHELL: /bin/bash
-.ONESHELL: # Use one shell for all commands within a target
-#.SILENT: # Disable command echoing
+.ONESHELL: # Use sae shell for all commands within a target
+.SILENT: # Disable command echoing
+.NOTPARALLEL:
 .DEFAULT_GOAL=usage
 
-# Environment flag used to control per env configuration and statefiles
-# https://www.terraform.io/docs/state/workspaces.html
-env := default
-TF_WORKSPACE := $(env)
+#########################################################
+# Shell Coloring										#
+#########################################################
+override bold	:= $(shell tput bold)
+override error	:= $(shell tput setaf 1)
+override ok		:= $(shell tput setaf 2)
+override info	:= $(shell tput setaf 3)
+override reset	:= $(shell tput sgr0)
 
-ifndef project
-$(error No project defined)
-endif 
-
-#################################
-# Paths						   	#
-#################################
-root 			:= $(realpath .)
+#########################################################
+# File Paths						   					#
+#########################################################
+working_dir 			:= $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+modules			:= $(working_dir)/modules
 project			:= $(project:%/=%)
 source 			:= $(realpath $(project))
 terraform 		:= $(source)/.terraform
 plans			:= $(source)/.tfplan
-tfvars			:= $(notdir $(wildcard $(source)/$(env).tfvars))
+tfvars			:= $(notdir $(wildcard $(working_dir)/$(env.tfvars) $(working_dir)/*.$(env.tfvars) $(source)/$(env).tfvars) $(source)/*.$(env).tfvars)
 var-files 		:= $(tfvars:%=-var-file=%)
 plan			:= $(plans)/$(env).tfplan
 destroy-plan	:= $(plans)/$(env).destroy.tfplan
 
-ifndef source
-$(error $(project) is not a valid path)
-endif
+#########################################################
+# Environment flag used to control per env 				#
+# configuration and statefiles							#
+# https://www.terraform.io/docs/state/workspaces.html	#
+#########################################################
+env ?= default
+override TF_WORKSPACE := $(env)
 
-# Include arguments from general and project specific environment files
--include .env $(env).env $(source)/.env $(source)/$(env).env
-export # Export all variables as ENNVAR to child processes/shells
+#==============================================================================
+# Make File Includes
+#------------------------------------------------------------------------------
+-include $(working_dir)/*.mk 
+-include $(source)/*.mk
 
-# Print help for the target terraform command if help is specified as a build target
+#==============================================================================
+# Environment Variable File Includes
+#------------------------------------------------------------------------------
+-include $(working_dir)/.env $(working_dir)/$(env).env $(working_dir)/*.$(env).env 
+-include $(source)/.env $(source)/$(env).env $(source)/*.$(env).env
+
+# Print help for the target terraform command if help is 
+# specified as a build target
 args += $(if $(findstring help,$(MAKECMDGOALS)), "--help")
 
-#################################
-# Print usage instructions		#
-#################################
+#==============================================================================
+# Print usage instructions		
+#------------------------------------------------------------------------------
 .PHONY: usage
 usage:
 	echo
 	echo "Usage:"
-	echo "---------------"	
-	
+	echo "---------------"
+	# TODO: Auto extract usage docs and print here see https://github.com/pgporada/terraform-makefile/blob/master/Makefile
+#==============================================================================
+
 #################################
 # Cleanup temp build files		#
 #################################
@@ -63,7 +83,35 @@ clean:
 clean\:plans:
 	rm -rf $(plans)
 
-$(terraform):
+#########################################################
+# Sanity Checks											#
+#########################################################
+override error	:= $(shell tput setaf 1)
+override ok		:= $(shell tput setaf 2)
+override info	:= $(shell tput setaf 3)
+override reset	:= $(shell tput sgr0)
+
+define log
+	case $2 in
+	info)
+		code=2
+		;;
+	warn)
+		code=3
+		;;
+	error)
+		code=1
+		;;
+	esac)
+	tput setaf $code
+	echo $1
+	tput sgr0
+endef
+
+check:	
+	$(call log, No project defined)
+
+$(terraform): check
 	echo "Initializing $(project) ..."
 	cd $(source)
 	terraform init -get $(args)	-upgrade=true
@@ -77,8 +125,8 @@ init: clean $(terraform)
 #################################
 # Build Stack Plan				#
 #################################
-$(plans):
-	mkdir -p $@
+$(plans): mkdir -p $@;
+
 
 .PHONY: plan
 plan: $(terraform) $(plans)
